@@ -19,6 +19,17 @@ const OrdersList = () => {
   // Pagination state
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Handle responsive behavior
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Fetch orders when page changes
   useEffect(() => {
@@ -59,23 +70,27 @@ const OrdersList = () => {
       dataIndex: 'id',
       key: 'id',
       width: 80,
+      responsive: ['md'],
     },
     {
       title: 'Customer ID',
       dataIndex: 'customerId',
       key: 'customerId',
       width: 120,
+      responsive: ['lg'],
     },
     {
       title: 'Order Number',
       dataIndex: 'orderNumber',
       key: 'orderNumber',
+      ellipsis: true,
     },
     {
       title: 'Order Date',
       dataIndex: 'orderDate',
       key: 'orderDate',
-      render: (date) => date ? dayjs(date).format('YYYY-MM-DD HH:mm') : 'N/A',
+      render: (date) => date ? dayjs(date).format(isMobile ? 'MM/DD' : 'YYYY-MM-DD HH:mm') : 'N/A',
+      responsive: ['md'],
     },
     {
       title: 'Status',
@@ -87,26 +102,30 @@ const OrdersList = () => {
       dataIndex: 'totalAmount',
       key: 'totalAmount',
       render: (amount) => amount ? `$${Number(amount).toFixed(2)}` : '$0.00',
+      responsive: ['md'],
     },
     {
       title: 'Actions',
       key: 'actions',
-      width: 200,
+      width: isMobile ? 120 : 200,
+      fixed: 'right',
       render: (_, record) => (
-        <Space>
+        <Space size="small" className="table-actions">
           <Button
             type="link"
             icon={<EyeOutlined />}
             onClick={() => navigate(`/orders/${record.id}`)}
+            size="small"
           >
-            View
+            {!isMobile && 'View'}
           </Button>
           <Button
             type="link"
             icon={<EditOutlined />}
             onClick={() => navigate(`/orders/${record.id}/edit`)}
+            size="small"
           >
-            Edit
+            {!isMobile && 'Edit'}
           </Button>
           <Popconfirm
             title="Delete order"
@@ -119,8 +138,9 @@ const OrdersList = () => {
               type="link"
               danger
               icon={<DeleteOutlined />}
+              size="small"
             >
-              Delete
+              {!isMobile && 'Delete'}
             </Button>
           </Popconfirm>
         </Space>
@@ -136,31 +156,39 @@ const OrdersList = () => {
 
   return (
     <div>
-      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2 style={{ margin: 0 }}>Orders</h2>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => navigate('/orders/new')}
-        >
-          New Order
-        </Button>
+      <div className="page-header">
+        <h2>Orders</h2>
+        <div className="page-header-actions">
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => navigate('/orders/new')}
+            block={isMobile}
+          >
+            {isMobile ? <PlusOutlined /> : 'New Order'}
+          </Button>
+        </div>
       </div>
       
-      <Table
-        columns={columns}
-        dataSource={orders}
-        loading={loading}
-        rowKey="id"
-        pagination={{
-          current: pageNumber,
-          pageSize: pageSize,
-          total: total,
-          showSizeChanger: true,
-          showTotal: (total) => `Total ${total} orders`,
-        }}
-        onChange={handleTableChange}
-      />
+      <div className="table-responsive">
+        <Table
+          columns={columns}
+          dataSource={orders}
+          loading={loading}
+          rowKey="id"
+          scroll={{ x: 'max-content' }}
+          pagination={{
+            current: pageNumber,
+            pageSize: pageSize,
+            total: total,
+            showSizeChanger: true,
+            showTotal: (total) => `Total ${total} orders`,
+            responsive: true,
+            pageSizeOptions: ['10', '20', '50', '100'],
+          }}
+          onChange={handleTableChange}
+        />
+      </div>
     </div>
   );
 };

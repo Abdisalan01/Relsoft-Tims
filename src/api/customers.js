@@ -90,3 +90,54 @@ export const deleteCustomer = async (id) => {
   const response = await apiClient.delete(`/api/customers/${id}`);
   return response.data;
 };
+
+/**
+ * Search customers with pagination
+ * query: search term
+ * pageNumber: which page to show (starts at 1)
+ * pageSize: how many items per page
+ */
+export const searchCustomers = async (query, pageNumber = 1, pageSize = 10) => {
+  const response = await apiClient.get('/api/customers/api/customers/search', {
+    params: { query, pageNumber, pageSize },
+  });
+  
+  const data = response.data;
+  
+  // Handle different response shapes from API
+  if (Array.isArray(data)) {
+    return {
+      items: data,
+      total: data.length,
+      pageNumber: 1,
+      pageSize: data.length,
+    };
+  }
+  
+  // Try common response formats
+  if (data.items) {
+    return {
+      items: data.items,
+      total: data.totalCount || data.total || data.items.length,
+      pageNumber: data.pageNumber || pageNumber,
+      pageSize: data.pageSize || pageSize,
+    };
+  }
+  
+  if (data.data) {
+    return {
+      items: data.data,
+      total: data.total || data.data.length,
+      pageNumber: data.pageNumber || pageNumber,
+      pageSize: data.pageSize || pageSize,
+    };
+  }
+  
+  // Fallback if we don't recognize the format
+  return {
+    items: [],
+    total: 0,
+    pageNumber: pageNumber,
+    pageSize: pageSize,
+  };
+};

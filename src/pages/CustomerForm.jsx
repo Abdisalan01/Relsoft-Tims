@@ -58,7 +58,7 @@ const CustomerForm = () => {
   };
 
   return (
-    <div>
+    <div className="form-container">
       <h2 style={{ marginBottom: 24 }}>
         {isEditMode ? 'Edit Customer' : 'Create New Customer'}
       </h2>
@@ -68,10 +68,12 @@ const CustomerForm = () => {
           layout="vertical"
           onFinish={onFinish}
           autoComplete="off"
+          size="large"
         >
           <Form.Item
             label="Name"
             name="name"
+            rules={[{ required: true, message: 'Please enter customer name' }]}
           >
             <Input placeholder="Enter customer name" />
           </Form.Item>
@@ -86,7 +88,7 @@ const CustomerForm = () => {
               },
             ]}
           >
-            <Input placeholder="Enter email address" />
+            <Input placeholder="Enter email address" type="email" />
           </Form.Item>
 
           <Form.Item
@@ -98,10 +100,10 @@ const CustomerForm = () => {
 
           <Form.Item>
             <Space>
-              <Button type="primary" htmlType="submit" loading={loading}>
+              <Button type="primary" htmlType="submit" loading={loading} size="large">
                 {isEditMode ? 'Update Customer' : 'Create Customer'}
               </Button>
-              <Button onClick={() => navigate(isEditMode ? `/customers/${id}` : '/customers')}>
+              <Button onClick={() => navigate(isEditMode ? `/customers/${id}` : '/customers')} size="large">
                 Cancel
               </Button>
             </Space>

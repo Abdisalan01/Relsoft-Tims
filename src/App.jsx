@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { ConfigProvider } from 'antd';
+import { ConfigProvider, theme } from 'antd';
 import AppLayout from './components/Layout';
 
 // Import all pages
@@ -17,7 +17,16 @@ import OrderDetails from './pages/OrderDetails';
  */
 function App() {
   return (
-    <ConfigProvider>
+    <ConfigProvider
+      theme={{
+        token: {
+          colorPrimary: '#ba2026',
+          borderRadius: 6,
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+        },
+        algorithm: theme.defaultAlgorithm,
+      }}
+    >
       <BrowserRouter>
         <AppLayout>
           <Routes>

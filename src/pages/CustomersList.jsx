@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Table, Button, Space, message, Popconfirm } from 'antd';
-import { PlusOutlined, EyeOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Table, Button, Space, message, Popconfirm, Input } from 'antd';
+import { PlusOutlined, EyeOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { getCustomersPaged, deleteCustomer } from '../api/customers';
+import { getCustomersPaged, deleteCustomer, searchCustomers } from '../api/customers';
 
 /**
  * Customers list page with pagination
@@ -18,11 +18,44 @@ const CustomersList = () => {
   // Pagination state
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-
+  
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeSearchQuery, setActiveSearchQuery] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Handle responsive behavior
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
   // Fetch customers when page changes
   useEffect(() => {
-    fetchCustomers();
-  }, [pageNumber, pageSize]);
+    const loadData = async () => {
+      if (activeSearchQuery.trim()) {
+        setLoading(true);
+        try {
+          const result = await searchCustomers(activeSearchQuery, pageNumber, pageSize);
+          setCustomers(result.items || []);
+          setTotal(result.total || 0);
+        } catch (error) {
+          message.error('Failed to search customers');
+          console.error('Error searching customers:', error);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        fetchCustomers();
+      }
+    };
+    loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageNumber, pageSize, activeSearchQuery]);
 
   // Function to fetch customers from API
   const fetchCustomers = async () => {
@@ -39,13 +72,36 @@ const CustomersList = () => {
     }
   };
 
+
+  // Handle search button click
+  const onSearch = () => {
+    setPageNumber(1); // Reset to first page when searching
+    setActiveSearchQuery(searchQuery.trim());
+  };
+
+  // Handle search input change
+  const onSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+    // If search is cleared, reset active search and fetch all customers
+    if (!e.target.value.trim()) {
+      setActiveSearchQuery('');
+      setPageNumber(1);
+    }
+  };
+
   // Handle delete customer
   const handleDelete = async (id) => {
     try {
       await deleteCustomer(id);
       message.success('Customer deleted successfully');
-      // Refresh the list
-      fetchCustomers();
+      // Refresh the list - maintain current search state
+      if (activeSearchQuery.trim()) {
+        const result = await searchCustomers(activeSearchQuery, pageNumber, pageSize);
+        setCustomers(result.items || []);
+        setTotal(result.total || 0);
+      } else {
+        fetchCustomers();
+      }
     } catch (error) {
       message.error('Failed to delete customer');
     }
@@ -58,41 +114,49 @@ const CustomersList = () => {
       dataIndex: 'id',
       key: 'id',
       width: 80,
+      responsive: ['md'],
     },
     {
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
+      ellipsis: true,
     },
     {
       title: 'Email',
       dataIndex: 'email',
       key: 'email',
+      ellipsis: true,
+      responsive: ['md'],
     },
     {
       title: 'Phone',
       dataIndex: 'phone',
       key: 'phone',
+      responsive: ['lg'],
     },
     {
       title: 'Actions',
       key: 'actions',
-      width: 200,
+      width: isMobile ? 120 : 200,
+      fixed: 'right',
       render: (_, record) => (
-        <Space>
+        <Space size="small" className="table-actions">
           <Button
             type="link"
             icon={<EyeOutlined />}
             onClick={() => navigate(`/customers/${record.id}`)}
+            size="small"
           >
-            View
+            {!isMobile && 'View'}
           </Button>
           <Button
             type="link"
             icon={<EditOutlined />}
             onClick={() => navigate(`/customers/${record.id}/edit`)}
+            size="small"
           >
-            Edit
+            {!isMobile && 'Edit'}
           </Button>
           <Popconfirm
             title="Delete customer"
@@ -105,8 +169,9 @@ const CustomersList = () => {
               type="link"
               danger
               icon={<DeleteOutlined />}
+              size="small"
             >
-              Delete
+              {!isMobile && 'Delete'}
             </Button>
           </Popconfirm>
         </Space>
@@ -122,31 +187,57 @@ const CustomersList = () => {
 
   return (
     <div>
-      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2 style={{ margin: 0 }}>Customers</h2>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => navigate('/customers/new')}
-        >
-          New Customer
-        </Button>
+      <div className="page-header">
+        <h2>Customers</h2>
+        <div className="page-header-actions">
+          <div className="search-container">
+            <Input
+              placeholder="Search customers..."
+              value={searchQuery}
+              onChange={onSearchChange}
+              onPressEnter={onSearch}
+              style={{ flex: 1 }}
+              allowClear
+              prefix={<SearchOutlined />}
+            />
+            <Button
+              type="primary"
+              icon={<SearchOutlined />}
+              onClick={onSearch}
+            >
+              {!isMobile && 'Search'}
+            </Button>
+          </div>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => navigate('/customers/new')}
+            block={isMobile}
+          >
+            {isMobile ? <PlusOutlined /> : 'New Customer'}
+          </Button>
+        </div>
       </div>
       
-      <Table
-        columns={columns}
-        dataSource={customers}
-        loading={loading}
-        rowKey="id"
-        pagination={{
-          current: pageNumber,
-          pageSize: pageSize,
-          total: total,
-          showSizeChanger: true,
-          showTotal: (total) => `Total ${total} customers`,
-        }}
-        onChange={handleTableChange}
-      />
+      <div className="table-responsive">
+        <Table
+          columns={columns}
+          dataSource={customers}
+          loading={loading}
+          rowKey="id"
+          scroll={{ x: 'max-content' }}
+          pagination={{
+            current: pageNumber,
+            pageSize: pageSize,
+            total: total,
+            showSizeChanger: true,
+            showTotal: (total) => `Total ${total} customers`,
+            responsive: true,
+            pageSizeOptions: ['10', '20', '50', '100'],
+          }}
+          onChange={handleTableChange}
+        />
+      </div>
     </div>
   );
 };

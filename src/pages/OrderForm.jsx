@@ -94,7 +94,7 @@ const OrderForm = () => {
   }));
 
   return (
-    <div>
+    <div className="form-container">
       <h2 style={{ marginBottom: 24 }}>
         {isEditMode ? 'Edit Order' : 'Create New Order'}
       </h2>
@@ -104,6 +104,7 @@ const OrderForm = () => {
           layout="vertical"
           onFinish={onFinish}
           autoComplete="off"
+          size="large"
         >
           <Form.Item
             label="Customer"
@@ -182,10 +183,10 @@ const OrderForm = () => {
 
           <Form.Item>
             <Space>
-              <Button type="primary" htmlType="submit" loading={loading}>
+              <Button type="primary" htmlType="submit" loading={loading} size="large">
                 {isEditMode ? 'Update Order' : 'Create Order'}
               </Button>
-              <Button onClick={() => navigate(isEditMode ? `/orders/${id}` : '/orders')}>
+              <Button onClick={() => navigate(isEditMode ? `/orders/${id}` : '/orders')} size="large">
                 Cancel
               </Button>
             </Space>

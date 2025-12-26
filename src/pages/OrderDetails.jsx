@@ -61,36 +61,44 @@ const OrderDetails = () => {
 
   return (
     <div>
-      <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2 style={{ margin: 0 }}>Order Details</h2>
-        <Space>
-          <Button
-            type="primary"
-            icon={<EditOutlined />}
-            onClick={() => navigate(`/orders/${id}/edit`)}
-          >
-            Edit
-          </Button>
-          <Popconfirm
-            title="Delete order"
-            description="Are you sure you want to delete this order?"
-            onConfirm={handleDelete}
-            okText="Yes"
-            cancelText="No"
-          >
+      <div className="page-header">
+        <h2>Order Details</h2>
+        <div className="page-header-actions">
+          <Space wrap>
             <Button
-              danger
-              icon={<DeleteOutlined />}
-              loading={deleting}
+              type="primary"
+              icon={<EditOutlined />}
+              onClick={() => navigate(`/orders/${id}/edit`)}
             >
-              Delete
+              <span style={{ display: window.innerWidth < 768 ? 'none' : 'inline' }}>Edit</span>
+              {window.innerWidth < 768 && <EditOutlined />}
             </Button>
-          </Popconfirm>
-        </Space>
+            <Popconfirm
+              title="Delete order"
+              description="Are you sure you want to delete this order?"
+              onConfirm={handleDelete}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Button
+                danger
+                icon={<DeleteOutlined />}
+                loading={deleting}
+              >
+                <span style={{ display: window.innerWidth < 768 ? 'none' : 'inline' }}>Delete</span>
+                {window.innerWidth < 768 && <DeleteOutlined />}
+              </Button>
+            </Popconfirm>
+          </Space>
+        </div>
       </div>
       
       <Card>
-        <Descriptions column={1} bordered>
+        <Descriptions 
+          column={{ xs: 1, sm: 1, md: 2, lg: 2 }} 
+          bordered
+          size="middle"
+        >
           {order.id && (
             <Descriptions.Item label="ID">{order.id}</Descriptions.Item>
           )}
@@ -103,7 +111,7 @@ const OrderDetails = () => {
           <Descriptions.Item label="Total Amount">
             {order.totalAmount ? `$${Number(order.totalAmount).toFixed(2)}` : '$0.00'}
           </Descriptions.Item>
-          <Descriptions.Item label="Notes">{order.notes || 'N/A'}</Descriptions.Item>
+          <Descriptions.Item label="Notes" span={2}>{order.notes || 'N/A'}</Descriptions.Item>
         </Descriptions>
       </Card>
     </div>

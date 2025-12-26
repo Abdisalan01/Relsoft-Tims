@@ -15,7 +15,7 @@ const CustomerDetails = () => {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
 
-  // Load customer data when component mounts
+  // Load customer daata
   useEffect(() => {
     loadCustomer();
   }, [id]);
@@ -60,42 +60,51 @@ const CustomerDetails = () => {
 
   return (
     <div>
-      <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2 style={{ margin: 0 }}>Customer Details</h2>
-        <Space>
-          <Button
-            icon={<ShoppingCartOutlined />}
-            onClick={() => navigate(`/customers/${id}/orders`)}
-          >
-            View Customer Orders
-          </Button>
-          <Button
-            type="primary"
-            icon={<EditOutlined />}
-            onClick={() => navigate(`/customers/${id}/edit`)}
-          >
-            Edit
-          </Button>
-          <Popconfirm
-            title="Delete customer"
-            description="Are you sure you want to delete this customer?"
-            onConfirm={handleDelete}
-            okText="Yes"
-            cancelText="No"
-          >
+      <div className="page-header">
+        <h2>Customer Details</h2>
+        <div className="page-header-actions">
+          <Space wrap>
             <Button
-              danger
-              icon={<DeleteOutlined />}
-              loading={deleting}
+              icon={<ShoppingCartOutlined />}
+              onClick={() => navigate(`/customers/${id}/orders`)}
             >
-              Delete
+              <span style={{ display: window.innerWidth < 768 ? 'none' : 'inline' }}>View Orders</span>
+              {window.innerWidth < 768 && <ShoppingCartOutlined />}
             </Button>
-          </Popconfirm>
-        </Space>
+            <Button
+              type="primary"
+              icon={<EditOutlined />}
+              onClick={() => navigate(`/customers/${id}/edit`)}
+            >
+              <span style={{ display: window.innerWidth < 768 ? 'none' : 'inline' }}>Edit</span>
+              {window.innerWidth < 768 && <EditOutlined />}
+            </Button>
+            <Popconfirm
+              title="Delete customer"
+              description="Are you sure you want to delete this customer?"
+              onConfirm={handleDelete}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Button
+                danger
+                icon={<DeleteOutlined />}
+                loading={deleting}
+              >
+                <span style={{ display: window.innerWidth < 768 ? 'none' : 'inline' }}>Delete</span>
+                {window.innerWidth < 768 && <DeleteOutlined />}
+              </Button>
+            </Popconfirm>
+          </Space>
+        </div>
       </div>
       
       <Card>
-        <Descriptions column={1} bordered>
+        <Descriptions 
+          column={{ xs: 1, sm: 1, md: 2, lg: 2 }} 
+          bordered
+          size="middle"
+        >
           {customer.id && (
             <Descriptions.Item label="ID">{customer.id}</Descriptions.Item>
           )}

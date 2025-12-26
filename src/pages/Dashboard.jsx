@@ -37,24 +37,26 @@ const Dashboard = () => {
   return (
     <div>
       <h2 style={{ marginBottom: 24 }}>Dashboard</h2>
-      <Row gutter={16}>
-        <Col span={12}>
-          <Card>
+      <Row gutter={[16, 16]}>
+        <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+          <Card className="statistic-card" style={{ background: 'linear-gradient(135deg, #ba2026 0%, #8a1519 100%)' }}>
             <Statistic
               title="Total Customers"
               value={customersTotal}
               prefix={<UserOutlined />}
               loading={loading}
+              valueStyle={{ color: '#fff' }}
             />
           </Card>
         </Col>
-        <Col span={12}>
-          <Card>
+        <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+          <Card className="statistic-card" style={{ background: 'linear-gradient(135deg, #ba2026 0%, #d42d35 100%)' }}>
             <Statistic
               title="Total Orders"
               value={ordersTotal}
               prefix={<ShoppingCartOutlined />}
               loading={loading}
+              valueStyle={{ color: '#fff' }}
             />
           </Card>
         </Col>
