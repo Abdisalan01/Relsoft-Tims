@@ -1,4 +1,5 @@
-# MyPracticeApp Admin Dashboard
+# Relsoft Tims
+Admin Dashboard
 
 A simple React frontend that consumes the REST API for managing Customers and Orders.
 
