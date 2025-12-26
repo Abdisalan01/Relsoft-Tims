@@ -98,7 +98,8 @@ export const deleteCustomer = async (id) => {
  * pageSize: how many items per page
  */
 export const searchCustomers = async (query, pageNumber = 1, pageSize = 10) => {
-  const response = await apiClient.get('/customers/search', {
+  // Note: Backend has unusual endpoint path: /api/customers/api/customers/search
+  const response = await apiClient.get('/customers/api/customers/search', {
     params: { query, pageNumber, pageSize },
   });
   
