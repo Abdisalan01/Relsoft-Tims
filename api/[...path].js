@@ -28,6 +28,13 @@ export default async function handler(req, res) {
     return;
   }
 
+  // Log that the function was called (for debugging)
+  console.log('=== Vercel Function Called ===');
+  console.log('Method:', req.method);
+  console.log('URL:', req.url);
+  console.log('Query:', JSON.stringify(req.query));
+  console.log('Headers:', JSON.stringify(req.headers));
+
   // Your backend API URL
   // You can override this with an environment variable in Vercel dashboard
   const API_BASE_URL = process.env.VITE_API_BASE_URL || 'https://relsofttims-001-site1.gtempurl.com';
@@ -52,17 +59,36 @@ export default async function handler(req, res) {
   
   // If pathArray is empty, try to extract from URL
   if (pathArray.length === 0 && req.url) {
-    const urlPath = new URL(req.url, `http://${req.headers.host || 'localhost'}`).pathname;
-    // Remove /api prefix if present
-    const cleanPath = urlPath.replace(/^\/api\/?/, '');
-    if (cleanPath) {
-      pathArray = cleanPath.split('/').filter(Boolean);
+    try {
+      const urlPath = new URL(req.url, `http://${req.headers.host || 'localhost'}`).pathname;
+      // Remove /api prefix if present
+      const cleanPath = urlPath.replace(/^\/api\/?/, '');
+      if (cleanPath) {
+        pathArray = cleanPath.split('/').filter(Boolean);
+      }
+    } catch (e) {
+      console.error('Error parsing URL:', e);
+      // Try simple string manipulation as fallback
+      const urlMatch = req.url.match(/\/api\/(.+?)(\?|$)/);
+      if (urlMatch && urlMatch[1]) {
+        pathArray = urlMatch[1].split('/').filter(Boolean);
+      }
     }
   }
   
   // Join the path segments with '/' to create the full path
   // Example: ['customers', 'paged'] becomes '/customers/paged'
   const apiPath = pathArray.length > 0 ? '/' + pathArray.join('/') : '';
+  
+  // If we still don't have a path, return an error
+  if (!apiPath) {
+    console.error('No path extracted from request');
+    return res.status(400).json({ 
+      error: 'Invalid API path',
+      url: req.url,
+      query: req.query
+    });
+  }
   
   // Build query string from all query parameters except 'path'
   // The 'path' parameter is used by Vercel for routing, so we exclude it
@@ -112,30 +138,47 @@ export default async function handler(req, res) {
     }
 
     // Make the request to your backend
+    console.log('Fetching from backend:', targetUrl);
     const response = await fetch(targetUrl, fetchOptions);
     
     // Log for debugging
-    console.log('Proxying request:', {
+    console.log('Backend response:', {
       method: req.method,
       originalUrl: req.url,
       targetUrl: targetUrl,
       status: response.status,
-      pathArray: pathArray
+      statusText: response.statusText,
+      pathArray: pathArray,
+      headers: Object.fromEntries(response.headers.entries())
     });
     
     // Get the response data (handle both JSON and non-JSON responses)
     let data;
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      data = await response.json();
-    } else {
-      // If not JSON, get as text
-      const text = await response.text();
-      try {
-        data = JSON.parse(text);
-      } catch {
-        data = { message: text || 'Error occurred' };
+    const contentType = response.headers.get('content-type') || '';
+    
+    try {
+      if (contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        // If not JSON, get as text
+        const text = await response.text();
+        try {
+          data = JSON.parse(text);
+        } catch {
+          data = { 
+            message: text || `Backend returned ${response.status} ${response.statusText}`,
+            status: response.status,
+            statusText: response.statusText
+          };
+        }
       }
+    } catch (parseError) {
+      console.error('Error parsing response:', parseError);
+      data = { 
+        message: `Error parsing response: ${parseError.message}`,
+        status: response.status,
+        statusText: response.statusText
+      };
     }
     
     // Forward the status code and data back to the frontend
