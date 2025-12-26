@@ -12,6 +12,16 @@
  */
 
 export default async function handler(req, res) {
+  // IMPORTANT: This confirms the function is being called
+  // If you see this in logs, the function is working
+  console.log('=== VERCEL FUNCTION CALLED ===');
+  console.log('Full request details:', {
+    method: req.method,
+    url: req.url,
+    query: req.query,
+    path: req.query.path
+  });
+
   // Set CORS headers to allow requests from your Vercel domain
   // This allows your frontend to make API calls without CORS errors
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -27,13 +37,6 @@ export default async function handler(req, res) {
     res.status(200).end();
     return;
   }
-
-  // Log that the function was called (for debugging)
-  console.log('=== Vercel Function Called ===');
-  console.log('Method:', req.method);
-  console.log('URL:', req.url);
-  console.log('Query:', JSON.stringify(req.query));
-  console.log('Headers:', JSON.stringify(req.headers));
 
   // Your backend API URL
   // You can override this with an environment variable in Vercel dashboard
