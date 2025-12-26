@@ -4,7 +4,7 @@ import apiClient from './axios';
  * Get all orders (simple list)
  */
 export const getOrders = async () => {
-  const response = await apiClient.get('/api/orders');
+  const response = await apiClient.get('/orders');
   return Array.isArray(response.data) ? response.data : response.data?.items || response.data?.data || [];
 };
 
@@ -12,7 +12,7 @@ export const getOrders = async () => {
  * Get orders with pagination
  */
 export const getOrdersPaged = async (pageNumber = 1, pageSize = 10) => {
-  const response = await apiClient.get('/api/orders/paged', {
+  const response = await apiClient.get('/orders/paged', {
     params: { pageNumber, pageSize },
   });
   
@@ -58,7 +58,7 @@ export const getOrdersPaged = async (pageNumber = 1, pageSize = 10) => {
  * Get orders for a specific customer (with pagination)
  */
 export const getCustomerOrdersPaged = async (customerId, pageNumber = 1, pageSize = 10) => {
-  const response = await apiClient.get(`/api/customers/${customerId}/orders/paged`, {
+  const response = await apiClient.get(`/customers/${customerId}/orders/paged`, {
     params: { pageNumber, pageSize },
   });
   
@@ -103,7 +103,7 @@ export const getCustomerOrdersPaged = async (customerId, pageNumber = 1, pageSiz
  * Get one order by ID
  */
 export const getOrderById = async (id) => {
-  const response = await apiClient.get(`/api/orders/${id}`);
+  const response = await apiClient.get(`/orders/${id}`);
   return response.data;
 };
 
@@ -111,7 +111,7 @@ export const getOrderById = async (id) => {
  * Create a new order
  */
 export const createOrder = async (orderData) => {
-  const response = await apiClient.post('/api/orders', orderData);
+  const response = await apiClient.post('/orders', orderData);
   return response.data;
 };
 
@@ -119,7 +119,7 @@ export const createOrder = async (orderData) => {
  * Update existing order
  */
 export const updateOrder = async (id, orderData) => {
-  const response = await apiClient.put(`/api/orders/${id}`, orderData);
+  const response = await apiClient.put(`/orders/${id}`, orderData);
   return response.data;
 };
 
@@ -127,6 +127,6 @@ export const updateOrder = async (id, orderData) => {
  * Delete an order
  */
 export const deleteOrder = async (id) => {
-  const response = await apiClient.delete(`/api/orders/${id}`);
+  const response = await apiClient.delete(`/orders/${id}`);
   return response.data;
 };

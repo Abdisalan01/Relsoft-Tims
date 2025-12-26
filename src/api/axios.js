@@ -1,12 +1,10 @@
 import axios from 'axios';
 import { message } from 'antd';
 
-// In development, use relative paths so Vite proxy handles CORS
-// In production, use the Vercel serverless function proxy to avoid CORS issues
-const isDevelopment = import.meta.env.DEV;
-const baseURL = isDevelopment 
-  ? '' // Use relative paths in dev (Vite proxy will handle it)
-  : '/api'; // Use Vercel serverless function proxy in production
+// In development, Vite proxy handles /api requests
+// In production, Vercel serverless function handles /api requests
+// Both use the same baseURL pattern
+const baseURL = '/api';
 
 // Create axios instance with base URL
 const apiClient = axios.create({

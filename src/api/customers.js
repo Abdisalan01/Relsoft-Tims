@@ -4,7 +4,7 @@ import apiClient from './axios';
  * Get all customers (simple list)
  */
 export const getCustomers = async () => {
-  const response = await apiClient.get('/api/customers');
+  const response = await apiClient.get('/customers');
   // API might return array directly or wrapped in object
   return Array.isArray(response.data) ? response.data : response.data?.items || response.data?.data || [];
 };
@@ -15,7 +15,7 @@ export const getCustomers = async () => {
  * pageSize: how many items per page
  */
 export const getCustomersPaged = async (pageNumber = 1, pageSize = 10) => {
-  const response = await apiClient.get('/api/customers/paged', {
+  const response = await apiClient.get('/customers/paged', {
     params: { pageNumber, pageSize },
   });
   
@@ -63,7 +63,7 @@ export const getCustomersPaged = async (pageNumber = 1, pageSize = 10) => {
  * Get one customer by ID
  */
 export const getCustomerById = async (id) => {
-  const response = await apiClient.get(`/api/customers/${id}`);
+  const response = await apiClient.get(`/customers/${id}`);
   return response.data;
 };
 
@@ -71,7 +71,7 @@ export const getCustomerById = async (id) => {
  * Create a new customer
  */
 export const createCustomer = async (customerData) => {
-  const response = await apiClient.post('/api/customers', customerData);
+  const response = await apiClient.post('/customers', customerData);
   return response.data;
 };
 
@@ -79,7 +79,7 @@ export const createCustomer = async (customerData) => {
  * Update existing customer
  */
 export const updateCustomer = async (id, customerData) => {
-  const response = await apiClient.put(`/api/customers/${id}`, customerData);
+  const response = await apiClient.put(`/customers/${id}`, customerData);
   return response.data;
 };
 
@@ -87,7 +87,7 @@ export const updateCustomer = async (id, customerData) => {
  * Delete a customer
  */
 export const deleteCustomer = async (id) => {
-  const response = await apiClient.delete(`/api/customers/${id}`);
+  const response = await apiClient.delete(`/customers/${id}`);
   return response.data;
 };
 
@@ -98,7 +98,7 @@ export const deleteCustomer = async (id) => {
  * pageSize: how many items per page
  */
 export const searchCustomers = async (query, pageNumber = 1, pageSize = 10) => {
-  const response = await apiClient.get('/api/customers/api/customers/search', {
+  const response = await apiClient.get('/customers/search', {
     params: { query, pageNumber, pageSize },
   });
   
