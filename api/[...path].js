@@ -19,8 +19,19 @@ export default async function handler(req, res) {
   const API_BASE_URL = process.env.VITE_API_BASE_URL || 'https://relsofttims-001-site1.gtempurl.com';
   
   // Extract the path from the request
-  // req.query.path will be an array like ['customers', 'paged'] or ['customers', '1']
-  const pathArray = req.query.path || [];
+  // For Vercel [...path].js, req.query.path will be an array like ['customers', 'paged'] or ['customers', '1']
+  // If path is not in query, try to extract from URL
+  let pathArray = req.query.path;
+  
+  if (!pathArray) {
+    // Fallback: extract from URL if path is not in query
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const pathname = url.pathname;
+    // Remove /api prefix if present
+    const cleanPath = pathname.startsWith('/api/') ? pathname.slice(5) : pathname.startsWith('/api') ? pathname.slice(4) : pathname;
+    pathArray = cleanPath ? cleanPath.split('/').filter(Boolean) : [];
+  }
+  
   const path = Array.isArray(pathArray) 
     ? '/' + pathArray.join('/') 
     : '/' + (pathArray || '');
