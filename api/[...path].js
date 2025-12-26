@@ -30,16 +30,34 @@ export default async function handler(req, res) {
 
   // Your backend API URL
   // You can override this with an environment variable in Vercel dashboard
-  const API_BASE_URL = process.env.VITE_API_BASE_URL || 'http://relsofttims-001-site1.gtempurl.com';
+  const API_BASE_URL = process.env.VITE_API_BASE_URL || 'https://relsofttims-001-site1.gtempurl.com';
   
   // Extract the path from the request
   // For Vercel [...path].js files, the path segments are in req.query.path as an array
   // Example: /api/customers/paged becomes ['customers', 'paged']
   let pathArray = req.query.path;
   
+  // Debug: Log the request details
+  console.log('Request received:', {
+    url: req.url,
+    method: req.method,
+    query: req.query,
+    pathArray: pathArray
+  });
+  
   // If path is not an array, convert it to an array
   if (!Array.isArray(pathArray)) {
     pathArray = pathArray ? [pathArray] : [];
+  }
+  
+  // If pathArray is empty, try to extract from URL
+  if (pathArray.length === 0 && req.url) {
+    const urlPath = new URL(req.url, `http://${req.headers.host || 'localhost'}`).pathname;
+    // Remove /api prefix if present
+    const cleanPath = urlPath.replace(/^\/api\/?/, '');
+    if (cleanPath) {
+      pathArray = cleanPath.split('/').filter(Boolean);
+    }
   }
   
   // Join the path segments with '/' to create the full path
@@ -96,8 +114,29 @@ export default async function handler(req, res) {
     // Make the request to your backend
     const response = await fetch(targetUrl, fetchOptions);
     
-    // Get the response data
-    const data = await response.json();
+    // Log for debugging
+    console.log('Proxying request:', {
+      method: req.method,
+      originalUrl: req.url,
+      targetUrl: targetUrl,
+      status: response.status,
+      pathArray: pathArray
+    });
+    
+    // Get the response data (handle both JSON and non-JSON responses)
+    let data;
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      // If not JSON, get as text
+      const text = await response.text();
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = { message: text || 'Error occurred' };
+      }
+    }
     
     // Forward the status code and data back to the frontend
     res.status(response.status).json(data);
