@@ -107,44 +107,81 @@ const OrdersList = () => {
     {
       title: 'Actions',
       key: 'actions',
-      width: isMobile ? 120 : 200,
-      fixed: 'right',
-      render: (_, record) => (
-        <Space size="small" className="table-actions">
-          <Button
-            type="link"
-            icon={<EyeOutlined />}
-            onClick={() => navigate(`/orders/${record.id}`)}
-            size="small"
-          >
-            {!isMobile && 'View'}
-          </Button>
-          <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => navigate(`/orders/${record.id}/edit`)}
-            size="small"
-          >
-            {!isMobile && 'Edit'}
-          </Button>
-          <Popconfirm
-            title="Delete order"
-            description="Are you sure you want to delete this order?"
-            onConfirm={() => handleDelete(record.id)}
-            okText="Yes"
-            cancelText="No"
-          >
+      className: 'actions-column',
+      width: isMobile ? 200 : 220,
+      fixed: isMobile ? undefined : 'right',
+      // No responsive property - always visible on all screen sizes
+      render: (_, record) => {
+        // ✅ Mobile: stacked full-width buttons (always visible, easy tap)
+        if (isMobile) {
+          return (
+            <div className="mobile-actions">
+              <Button
+                block
+                icon={<EyeOutlined />}
+                onClick={() => navigate(`/orders/${record.id}`)}
+              >
+                View
+              </Button>
+
+              <Button
+                block
+                icon={<EditOutlined />}
+                onClick={() => navigate(`/orders/${record.id}/edit`)}
+              >
+                Edit
+              </Button>
+
+              <Popconfirm
+                title="Delete order"
+                description="Are you sure you want to delete this order?"
+                onConfirm={() => handleDelete(record.id)}
+                okText="Yes"
+                cancelText="No"
+              >
+                <Button block danger icon={<DeleteOutlined />}>
+                  Delete
+                </Button>
+              </Popconfirm>
+            </div>
+          );
+        }
+
+        // ✅ Desktop: compact inline actions
+        return (
+          <Space size="small" className="table-actions">
             <Button
               type="link"
-              danger
-              icon={<DeleteOutlined />}
+              icon={<EyeOutlined />}
+              onClick={() => navigate(`/orders/${record.id}`)}
               size="small"
             >
-              {!isMobile && 'Delete'}
+              View
             </Button>
-          </Popconfirm>
-        </Space>
-      ),
+
+            <Button
+              type="link"
+              icon={<EditOutlined />}
+              onClick={() => navigate(`/orders/${record.id}/edit`)}
+              size="small"
+            >
+              Edit
+            </Button>
+
+            <Popconfirm
+              title="Delete order"
+              description="Are you sure you want to delete this order?"
+              onConfirm={() => handleDelete(record.id)}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Button type="link" danger icon={<DeleteOutlined />} size="small">
+                Delete
+              </Button>
+            </Popconfirm>
+          </Space>
+        );
+      },
     },
   ];
 
@@ -161,11 +198,12 @@ const OrdersList = () => {
         <div className="page-header-actions">
           <Button
             type="primary"
-            icon={<PlusOutlined />}
+            icon={isMobile ? null : <PlusOutlined />}
             onClick={() => navigate('/orders/new')}
             block={isMobile}
+            className={isMobile ? 'add-Order-mobile-btn' : undefined}
           >
-            {isMobile ? <PlusOutlined /> : 'New Order'}
+            {isMobile ? 'Add New Order' : 'New Order'}
           </Button>
         </div>
       </div>
@@ -176,7 +214,8 @@ const OrdersList = () => {
           dataSource={orders}
           loading={loading}
           rowKey="id"
-          scroll={{ x: 'max-content' }}
+          // ✅ Optional: remove horizontal scroll on mobile to avoid hiding actions
+          scroll={isMobile ? undefined : { x: 'max-content' }}
           pagination={{
             current: pageNumber,
             pageSize: pageSize,

@@ -257,6 +257,49 @@ body {
   }
 }
 
+/* Mobile Actions - Stacked buttons for mobile view */
+.mobile-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  min-width: 180px;
+}
+
+.mobile-actions .ant-btn {
+  width: 100%;
+  margin: 0;
+  font-size: 12px;
+  padding: 6px 12px;
+  height: auto;
+}
+
+/* Ensure Actions column is always visible on mobile */
+@media (max-width: 768px) {
+  /* Force Actions column to always be visible */
+  .ant-table-thead > tr > th.actions-column,
+  .ant-table-tbody > tr > td.actions-column {
+    display: table-cell !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  .ant-table-thead > tr > th:last-child,
+  .ant-table-tbody > tr > td:last-child {
+    display: table-cell !important;
+    visibility: visible !important;
+  }
+  
+  /* Ensure table doesn't hide the Actions column */
+  .table-responsive .ant-table {
+    min-width: auto;
+  }
+  
+  .table-responsive .ant-table-tbody > tr > td.actions-column {
+    padding: 12px 8px !important;
+  }
+}
+
 /* Sidebar Enhancements */
 .ant-layout-sider {
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
