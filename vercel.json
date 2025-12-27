@@ -1,3 +1,9 @@
 {
-  "version": 2
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://relsofttims-001-site1.gtempurl.com/api/:path*"
+    }
+  ]
 }
