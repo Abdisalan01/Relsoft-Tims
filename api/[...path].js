@@ -40,7 +40,9 @@ export default async function handler(req, res) {
 
   // Your backend API URL
   // You can override this with an environment variable in Vercel dashboard
-  const API_BASE_URL = process.env.VITE_API_BASE_URL || 'https://relsofttims-001-site1.gtempurl.com';
+  // Remove trailing slash if present
+  const rawBaseUrl = process.env.VITE_API_BASE_URL || 'http://relsofttims-001-site1.gtempurl.com';
+  const API_BASE_URL = rawBaseUrl.replace(/\/$/, '');
   
   // Extract the path from the request
   // For Vercel [...path].js files, the path segments are in req.query.path as an array
@@ -112,6 +114,14 @@ export default async function handler(req, res) {
   // Build the full URL to your backend API
   // Example: http://relsofttims-001-site1.gtempurl.com/api/customers/paged?pageNumber=1&pageSize=10
   const targetUrl = `${API_BASE_URL}/api${apiPath}${queryString}`;
+
+  console.log('=== PROXY REQUEST DETAILS ===');
+  console.log('API_BASE_URL:', API_BASE_URL);
+  console.log('apiPath:', apiPath);
+  console.log('queryString:', queryString);
+  console.log('targetUrl:', targetUrl);
+  console.log('Request method:', req.method);
+  console.log('Request headers:', JSON.stringify(req.headers, null, 2));
 
   try {
     // Parse request body if present (for POST, PUT, PATCH requests)
@@ -188,11 +198,30 @@ export default async function handler(req, res) {
     res.status(response.status).json(data);
   } catch (error) {
     // If something goes wrong, log it and return an error
-    console.error('Proxy error:', error);
+    console.error('=== PROXY ERROR ===');
+    console.error('Error:', error);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
     console.error('Target URL was:', targetUrl);
+    console.error('Request method:', req.method);
+    console.error('Request URL:', req.url);
+    
+    // Provide more detailed error information
+    const errorMessage = error.message || 'Unknown error';
+    const isNetworkError = errorMessage.includes('fetch') || errorMessage.includes('network') || errorMessage.includes('ECONNREFUSED');
+    
     res.status(500).json({ 
-      message: 'Proxy error', 
-      error: error.message 
+      message: 'Proxy error: Failed to connect to backend API',
+      error: errorMessage,
+      targetUrl: targetUrl,
+      hint: isNetworkError 
+        ? 'Unable to reach the backend server. Please check if the API_BASE_URL is correct and the server is accessible.'
+        : 'An error occurred while processing the request.',
+      requestDetails: {
+        method: req.method,
+        originalUrl: req.url,
+        path: apiPath
+      }
     });
   }
 }
