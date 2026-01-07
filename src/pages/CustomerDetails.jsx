@@ -14,6 +14,15 @@ const CustomerDetails = () => {
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Handle responsive behavior
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Load customer daata
   useEffect(() => {
@@ -65,19 +74,17 @@ const CustomerDetails = () => {
         <div className="page-header-actions">
           <Space wrap>
             <Button
-              icon={<ShoppingCartOutlined />}
+              icon={!isMobile ? <ShoppingCartOutlined /> : null}
               onClick={() => navigate(`/customers/${id}/orders`)}
             >
-              <span style={{ display: window.innerWidth < 768 ? 'none' : 'inline' }}>View Orders</span>
-              {window.innerWidth < 768 && <ShoppingCartOutlined />}
+              {isMobile ? <ShoppingCartOutlined /> : 'View Orders'}
             </Button>
             <Button
               type="primary"
-              icon={<EditOutlined />}
+              icon={!isMobile ? <EditOutlined /> : null}
               onClick={() => navigate(`/customers/${id}/edit`)}
             >
-              <span style={{ display: window.innerWidth < 768 ? 'none' : 'inline' }}>Edit</span>
-              {window.innerWidth < 768 && <EditOutlined />}
+              {isMobile ? <EditOutlined /> : 'Edit'}
             </Button>
             <Popconfirm
               title="Delete customer"
@@ -88,11 +95,10 @@ const CustomerDetails = () => {
             >
               <Button
                 danger
-                icon={<DeleteOutlined />}
+                icon={!isMobile ? <DeleteOutlined /> : null}
                 loading={deleting}
               >
-                <span style={{ display: window.innerWidth < 768 ? 'none' : 'inline' }}>Delete</span>
-                {window.innerWidth < 768 && <DeleteOutlined />}
+                {isMobile ? <DeleteOutlined /> : 'Delete'}
               </Button>
             </Popconfirm>
           </Space>

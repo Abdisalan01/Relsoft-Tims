@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Table, Button, Space, message, Popconfirm } from 'antd';
-import { PlusOutlined, EyeOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, EyeOutlined, EditOutlined, DeleteOutlined, FilePdfOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { getOrdersPaged, deleteOrder } from '../api/orders';
 import dayjs from 'dayjs';
+import { generateOrdersPDF } from '../utils/pdfGenerator';
+import PDFPreviewModal from '../components/PDFPreviewModal';
 
 /**
  * Orders list page with pagination
@@ -20,6 +22,11 @@ const OrdersList = () => {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [isMobile, setIsMobile] = useState(false);
+  
+  // PDF export state
+  const [pdfPreviewVisible, setPdfPreviewVisible] = useState(false);
+  const [pdfBlob, setPdfBlob] = useState(null);
+  const [generatingPDF, setGeneratingPDF] = useState(false);
   
   // Handle responsive behavior
   useEffect(() => {
@@ -191,11 +198,53 @@ const OrdersList = () => {
     setPageSize(pagination.pageSize);
   };
 
+  // Generate and preview PDF
+  const handleExportPDF = async () => {
+    try {
+      setGeneratingPDF(true);
+      message.loading({ content: 'Generating PDF...', key: 'pdf-export', duration: 0 });
+
+      // Get all orders for PDF (using current orders in state)
+      // Note: For large datasets, you might want to fetch all orders from API
+      const ordersToExport = orders;
+
+      // Generate PDF using the utility
+      const blob = await generateOrdersPDF(ordersToExport, {
+        logoPath: '/assets/relsoft-logo.png', // Update this path to your logo location
+      });
+
+      setPdfBlob(blob);
+      setPdfPreviewVisible(true);
+      message.success({ content: 'PDF generated successfully!', key: 'pdf-export' });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      message.error({
+        content: error.message || 'Failed to generate PDF. Please try again.',
+        key: 'pdf-export',
+      });
+    } finally {
+      setGeneratingPDF(false);
+    }
+  };
+
   return (
     <div>
       <div className="page-header">
         <h2>Orders</h2>
         <div className="page-header-actions">
+          {/* PDF Export Button */}
+          <Button
+            type="default"
+            icon={<FilePdfOutlined />}
+            onClick={handleExportPDF}
+            block={isMobile}
+            loading={generatingPDF}
+            disabled={generatingPDF}
+          >
+            {isMobile ? 'Export PDF' : 'Export PDF'}
+          </Button>
+
+          {/* New Order Button */}
           <Button
             type="primary"
             icon={isMobile ? null : <PlusOutlined />}
@@ -207,6 +256,17 @@ const OrdersList = () => {
           </Button>
         </div>
       </div>
+
+      {/* PDF Preview Modal */}
+      <PDFPreviewModal
+        visible={pdfPreviewVisible}
+        onCancel={() => {
+          setPdfPreviewVisible(false);
+          setPdfBlob(null);
+        }}
+        pdfBlob={pdfBlob}
+        title="Orders Report Preview"
+      />
       
       <div className="table-responsive">
         <Table

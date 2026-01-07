@@ -257,6 +257,23 @@ body {
   }
 }
 
+/* Action Dropdown Button */
+.action-dropdown-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.action-dropdown-btn:hover {
+  background-color: #f5f5f5;
+  color: #ba2026;
+}
+
 /* Mobile Actions - Stacked buttons for mobile view */
 .mobile-actions {
   display: flex;

@@ -1,14 +1,18 @@
 import { useState, useEffect } from 'react';
-import { Table, Button, Space, message, Popconfirm, Input } from 'antd';
+import { Table, Button, Space, message, Popconfirm, Input, Dropdown, Modal } from 'antd';
 import {
   EyeOutlined,
   EditOutlined,
   DeleteOutlined,
   SearchOutlined,
   PlusOutlined,
+  MoreOutlined,
+  FilePdfOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { getCustomersPaged, deleteCustomer, searchCustomers } from '../api/customers';
+import { generateCustomersPDF } from '../utils/pdfGenerator';
+import PDFPreviewModal from '../components/PDFPreviewModal';
 
 const CustomersList = () => {
   const navigate = useNavigate();
@@ -23,6 +27,9 @@ const CustomersList = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSearchQuery, setActiveSearchQuery] = useState('');
   const [isMobile, setIsMobile] = useState(false);
+  const [pdfPreviewVisible, setPdfPreviewVisible] = useState(false);
+  const [pdfBlob, setPdfBlob] = useState(null);
+  const [generatingPDF, setGeneratingPDF] = useState(false);
 
   // Responsive behavior (mobile <= 768px)
   useEffect(() => {
@@ -91,6 +98,42 @@ const CustomersList = () => {
     }
   };
 
+  // Generate and preview PDF
+  const handleExportPDF = async () => {
+    try {
+      setGeneratingPDF(true);
+      message.loading({ content: 'Generating PDF...', key: 'pdf-export', duration: 0 });
+
+      // Get all customers for PDF (you might want to fetch all or use current page)
+      // For now, using current customers in state
+      const customersToExport = customers;
+
+      if (!customersToExport || customersToExport.length === 0) {
+        message.warning({ content: 'No customers to export', key: 'pdf-export' });
+        setGeneratingPDF(false);
+        return;
+      }
+
+      // Generate PDF using the utility
+      const blob = await generateCustomersPDF(customersToExport, {
+        searchQuery: activeSearchQuery,
+        logoPath: '/assets/relsoft-logo.png', // Update this path to your logo location
+      });
+
+      setPdfBlob(blob);
+      setPdfPreviewVisible(true);
+      message.success({ content: 'PDF generated successfully!', key: 'pdf-export' });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      message.error({
+        content: error.message || 'Failed to generate PDF. Please try again.',
+        key: 'pdf-export',
+      });
+    } finally {
+      setGeneratingPDF(false);
+    }
+  };
+
   const columns = [
     {
       title: 'ID',
@@ -122,10 +165,41 @@ const CustomersList = () => {
       title: 'Actions',
       key: 'actions',
       className: 'actions-column',
-      width: isMobile ? 200 : 220,
+      width: isMobile ? 120 : 100,
       fixed: isMobile ? undefined : 'right',
       // No responsive property - always visible on all screen sizes
       render: (_, record) => {
+        const menuItems = [
+          {
+            key: 'view',
+            label: 'View',
+            icon: <EyeOutlined />,
+            onClick: () => navigate(`/customers/${record.id}`),
+          },
+          {
+            key: 'edit',
+            label: 'Edit',
+            icon: <EditOutlined />,
+            onClick: () => navigate(`/customers/${record.id}/edit`),
+          },
+          {
+            key: 'delete',
+            label: 'Delete',
+            icon: <DeleteOutlined />,
+            danger: true,
+            onClick: () => {
+              Modal.confirm({
+                title: 'Delete customer',
+                content: 'Are you sure you want to delete this customer?',
+                okText: 'Yes',
+                cancelText: 'No',
+                okType: 'danger',
+                onOk: () => handleDelete(record.id),
+              });
+            },
+          },
+        ];
+
         // ✅ Mobile: stacked full-width buttons (always visible, easy tap)
         if (isMobile) {
           return (
@@ -161,39 +235,20 @@ const CustomersList = () => {
           );
         }
 
-        // ✅ Desktop: compact inline actions
+        // ✅ Desktop: dropdown menu
         return (
-          <Space size="small" className="table-actions">
+          <Dropdown
+            menu={{ items: menuItems }}
+            trigger={['click']}
+            placement="bottomRight"
+          >
             <Button
-              type="link"
-              icon={<EyeOutlined />}
-              onClick={() => navigate(`/customers/${record.id}`)}
+              type="text"
+              icon={<MoreOutlined />}
               size="small"
-            >
-              View
-            </Button>
-
-            <Button
-              type="link"
-              icon={<EditOutlined />}
-              onClick={() => navigate(`/customers/${record.id}/edit`)}
-              size="small"
-            >
-              Edit
-            </Button>
-
-            <Popconfirm
-              title="Delete customer"
-              description="Are you sure you want to delete this customer?"
-              onConfirm={() => handleDelete(record.id)}
-              okText="Yes"
-              cancelText="No"
-            >
-              <Button type="link" danger icon={<DeleteOutlined />} size="small">
-                Delete
-              </Button>
-            </Popconfirm>
-          </Space>
+              className="action-dropdown-btn"
+            />
+          </Dropdown>
         );
       },
     },
@@ -240,8 +295,31 @@ const CustomersList = () => {
           >
             {isMobile ? 'Add New Customer' : 'New Customer'}
           </Button>
+
+          {/* PDF Export Button */}
+          <Button
+            type="default"
+            icon={<FilePdfOutlined />}
+            onClick={handleExportPDF}
+            block={isMobile}
+            loading={generatingPDF}
+            disabled={generatingPDF || customers.length === 0}
+          >
+            {isMobile ? 'Export PDF' : 'Export PDF'}
+          </Button>
         </div>
       </div>
+
+      {/* PDF Preview Modal */}
+      <PDFPreviewModal
+        visible={pdfPreviewVisible}
+        onCancel={() => {
+          setPdfPreviewVisible(false);
+          setPdfBlob(null);
+        }}
+        pdfBlob={pdfBlob}
+        title="Customers Report Preview"
+      />
 
       <div className="table-responsive">
         <Table
